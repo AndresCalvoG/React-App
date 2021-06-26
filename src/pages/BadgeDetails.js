@@ -1,44 +1,26 @@
 import React from 'react'
 import './styles/BadgeDetails.css'
+import { Link } from 'react-router-dom';
 
 import confLogo from '../images/platziconf-logo.svg'
-import PageLoading from '../components/PageLoading'
-import PageError from '../components/PageError'
-import { thisTypeAnnotation } from '@babel/types'
+import Badge from '../components/Badge'
+import DeleteBadgeModal from '../components/DeleteBadgeModal'
 
-class BadgeDetails extends React.Component {
-    state = {
-        loading: true,
-        error: null,
-        data: undefined
+function useIncreaseCount(max){
+    const [ count, setCount ] = React.useState(0)
+
+    if(count > max){
+        setCount(0)
     }
+    return [count, setCount]
+}
 
-    componentDidMount(){
-        this.fetchData()
-    }
+function BadgeDetails(props){
+    const [ count, setCount ] = useIncreaseCount(4)
+    const badge = props.badge
 
-    fetchData = async () => {
-        this.setState({loading: true, error: null})
-
-        try{
-            const data = await applicationCache.badges.read(
-                this.props.match.params.badgeId
-            )
-            this.setState({ loading:false, data: data })
-        }catch(error){
-            this.setState({ loading:false, error: error })
-        }
-    }
-
-    render(){
-        if(this.state.loading){
-            return <PageLoading />
-        }
-        if(this.state.error){
-            return <PageError error={this.state.error} />
-        }
-
-        return(
+    return(
+        <div>
             <div className="BadgeDetails__hero">
                 <div className="container">
                     <div className="row">
@@ -46,13 +28,50 @@ class BadgeDetails extends React.Component {
                             <img src={confLogo} alt="Logo de la conferencia" />
                         </div>
                         <div className="col-6 BadgeDetails__hero-attendant-name">
-                            <h1>{this.state.data.firstName} {this.state.data.lastName}</h1>
+                            <h1>{badge.firstName} {badge.lastName}</h1>
                         </div>
                     </div>
                 </div>
             </div>
-        )
-    }
+            <div className="container">
+                <div className="row">
+                    <div className="col">
+                        <Badge 
+                            firstName={badge.firstName} 
+                            lastName={badge.lastName}
+                            jobTitle={badge.jobTitle} 
+                            twitter={badge.twitter}
+                            email={badge.email} 
+                        />
+                    </div>
+                    <div className="col">
+                        <h2>Actions</h2>
+                        <div>
+                            <div>
+                                <button onClick={() =>{
+                                    setCount(count + 1)
+                                }} className="btn btn-primary mr-4">
+                                Increase Count: {count}
+                                </button>
+
+                                <Link className="btn btn-primary mb-4" to={`/badges/${badge.id}/edit`}>
+                                    Edit
+                                </Link>
+                            </div>
+                            <div>
+                                <button onClick={props.onOpenModal} className="btn btn-danger">Delete</button>
+                                <DeleteBadgeModal 
+                                isOpen={props.modalIsOpen} 
+                                onClose={props.onCloseModal} 
+                                onDeleteBadge={props.onDeleteBadge}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default BadgeDetails
